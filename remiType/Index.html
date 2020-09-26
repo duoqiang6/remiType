@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>remiType</title>
+	<style type="text/css">
+		*{
+			padding: 0;
+			margin: 0;
+		}
+		ul li{
+			list-style-type: none;
+		}
+		body{
+			overflow: hidden;
+		}
+		#box{
+			overflow: hidden;
+			width: 100%;
+			height: 100vh;
+		}
+		#box img{
+			position: absolute;
+			bottom: 0;
+			width: 100%;
+		}
+		@keyframes jelly {
+			0%,
+			100% {
+				transform: scale(1, 1);
+			}
+			25% {
+				transform: scale(0.9, 1.1);
+			}
+			50% {
+				transform: scale(1.1, 0.9);
+			}
+			75% {
+				transform: scale(0.95, 1.05);
+			}
+		}
+		#tit{
+			position: fixed;
+			left: 0;
+			right: 0;
+			top: 0;
+			bottom: 0;
+			margin: auto;
+			width: 500px;
+			height: 100px;
+			background-color: #ccc;
+			border: 8px solid #3E3838;
+			border-radius: 40px;
+			line-height: 100px;
+			text-align: center;
+			font-size: 2em;
+			cursor: pointer;
+			user-select: none;
+		}
+		#tit:hover{
+			animation: jelly 0.5s;
+		}
+		#m-in{
+			position: fixed;
+			top: 40px;
+			right: 50px;
+			width: 50px;
+			height: 50px;
+		}
+		#m-in > img{
+			cursor: pointer;
+		}
+		.hide{
+			display: none;
+		}
+		.remi{
+			position: absolute;
+			/* left: 20px; */
+			top: calc(50vh + 40px);
+			width: 319px;
+			height: 280px;
+			background-image: url('./images/lm.png');
+		}
+		.remi span{
+			position: absolute;
+			top: -40px;
+			left: 50%;
+			transform: translateX(-40%);
+			font-size: 120px;
+			font-weight: bold;
+			text-shadow: 8px 8px 5px #614D46;
+		}
+	</style>
+</head>
+<body>
+	<div id="box">
+		<img class="bg" src="./images/bg.jpg">
+		<div id="tit">开始游戏</div>
+		<div id="m-in">
+			<img src="images/music.png" alt="" id="mplay" class="hide">
+			<img src="images/music_off.png" alt="" id="moff">
+		</div>
+		<!-- <div class="remi">
+			<span></span>
+		</div> -->
+		<audio id="music" src="music/music.mp3" loop></audio>
+	</div>
+
+	<script type="text/javascript">
+		let oTit = document.getElementById("tit"),
+			music = document.getElementById("music"),
+			mPic = document.querySelectorAll("#m-in > img"),
+			oPlay = document.getElementById("mplay"),
+			oOff = document.getElementById("moff");
+		//用于保存定时器中生成的对象
+		let list = [];
+
+		window.onload = function(){
+			music.pause();
+		}
+		//点击音乐标志切换音乐播放状态
+		oPlay.onclick = function(){
+			mPic.forEach(function(item, index){
+				item.classList.add("hide");
+			})
+			oOff.classList.remove("hide");
+			music.pause();
+		}
+		oOff.onclick = function(){
+			mPic.forEach(function(item, index){
+				item.classList.add("hide");
+			})
+			oPlay.classList.remove("hide");
+			music.play();
+		}
+		//点击开始
+		oTit.onclick = function(){
+			oTit.parentNode.removeChild(oTit);
+			mPic.forEach(function(item, index){
+				item.classList.add("hide");
+			})
+			oPlay.classList.remove("hide");
+			music.play();
+			setInterval(function (){
+				let lm = new Remis;
+				lm.fly();
+				list.push(lm);
+			},1200);
+		}
+
+		class Remis {
+			constructor() {
+						//创建div并设置样式
+						let oRemi = document.createElement("div");
+						let key = this.generateKey();
+						oRemi.className = "remi"+" "+key;
+						oRemi.style.top  = "1080px";
+						oRemi.style.left = Math.random() * 88 + "%";
+						//添加span以设置字母
+						let oSpan = document.createElement("span");
+						oSpan.innerText = key;
+						//span添加到div中
+						oRemi.appendChild(oSpan);
+						//将div添加到body中
+						// let oBody = document.getElementByTagName("body");
+						document.body.appendChild(oRemi);
+
+						this.remi = oRemi; //单个实例, 指向自己
+			}
+			bomb() {
+				//删除实例
+				//删除实例所对应的定时器
+				document.body.removeChild(this.remi);
+				// this.remi.parentNode.removeChild(this.remi)
+				window.clearInterval(this.timer);
+			}
+			fly() {
+				//获取高度数值
+				let offset = parseInt(this.remi.style.top);
+				let self = this; //self指向单个实例
+				this.timer = window.setInterval(function(){
+					offset -= 8;
+					if (offset < -300) {
+						self.bomb();
+					}
+						//注意!!此处的this默认指向window
+					self.remi.style.top = offset + "px" ;
+				},60);
+			}
+			//随机生成A-Z字母(根据keycode65-90)
+			generateKey() {
+				let num = Math.floor(Math.random()*(90-65+1))+65;
+				return String.fromCharCode(num);
+			}
+
+		}
+
+		document.onkeydown = function(event) {
+			var e = event || window.event || arguments.callee.caller.arguments[0];
+			if(e && e.key){
+				let delLm = document.querySelector("." + e.key.toUpperCase());
+				//1找到这个实例在数组中的位置
+				let search = list.findIndex(function(currentValue){
+					return currentValue.remi == delLm;
+				});
+				if (search === -1) return;
+				//取出对应的实例对象
+				let thisLm = list[search];
+				//删除数组中的数据及对应实例(通过实例bomb)
+				thisLm.bomb();
+				list.splice(search,1);
+				// document.body.removeChild(delLm);
+				//报错是因为计时器仍然在进行, 超出屏幕后又进行了一次bomb
+			}
+		}
+
+	</script>
+</body>
+</html>
